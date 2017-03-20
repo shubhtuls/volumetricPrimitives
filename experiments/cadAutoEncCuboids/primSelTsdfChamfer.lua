@@ -1,8 +1,8 @@
 -- sample script for chair training (stage 1)
---disp=0 gpu=1 nParts=20 nullReward=0 lossPower=2 shapeLrDecay=0.01 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=5 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=1 usePretrain=0 nSamplesChamfer=150 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01_null4em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
+--disp=0 gpu=1 nParts=20 nullReward=0 lossPower=2 shapeLrDecay=0.01 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.0001 usePretrain=0 nSamplesChamfer=150 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 
 -- sample script for chair training (stage 2)
--- TODO
+--disp=0 gpu=1 nParts=20 nullReward=8e-5 lossPower=2 shapeLrDecay=0.5 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.0001 usePretrain=1 nSamplesChamfer=150 numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 
 require 'cunn'
 require 'nngraph'
@@ -49,7 +49,7 @@ params.gridSize = 32
 params.gridBound = 0.5
 params.useBn = 1
 params.nParts = 6
-params.disp = 1
+params.disp = 0
 params.imsave = 0
 params.shapeLrDecay = 1
 params.probLrDecay = 1
@@ -71,21 +71,18 @@ params.normFactor = 'Surf'
 for k,v in pairs(params) do params[k] = tonumber(os.getenv(k)) or os.getenv(k) or params[k] end
 
 if params.useBn == 0 then params.useBn = false end
-if params.imsave == 0 then params.imsave = false end
 if params.usePretrain == 0 then params.usePretrain = false end
 params.synset = '0' .. tostring(params.synset) --to resolve string/number issues in passing bash arguments
 
 if(params.synset == '03001627') then
-    params.pretrainNet = 'chairChamferSurf_null_small_init_prob0pt0001_shape0pt01_null4em5'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 20000
+    params.pretrainNet = 'chairChamferSurf_null_small_init_prob0pt0001_shape0pt01'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 20000
 elseif (params.synset == '02691156') then
-    params.pretrainNet = 'aeroChamferSurf_null_small_init_prob0pt0001_shape0pt01_null4em5'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 30000
+    params.pretrainNet = 'aeroChamferSurf_null_small_init_prob0pt0001_shape0pt01'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 30000
 elseif (params.synset == '0quadrapeds') then
-    params.pretrainNet = 'quadraChamferSurf_null_small_init_prob0pt0001_shape0pt01_null4em5'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 20000
+    params.pretrainNet = 'quadraChamferSurf_null_small_init_prob0pt0001_shape0pt01'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 20000
 end
-params.chamferIndep = (params.normFactor=='None')
 
-
-params.modelsDataDir = '/data1/shubhtuls/code/shapeAssembly/cachedir/shapenet/chamferData/' .. params.synset
+params.modelsDataDir = '../cachedir/shapenet/chamferData/' .. params.synset
 params.visDir = '../cachedir/visualization/' .. params.name
 params.visMeshesDir = '../cachedir/visualization/meshes/' .. params.name
 params.snapshotDir = '../cachedir/snapshots/' .. params.name
@@ -100,7 +97,6 @@ else
     params.primTypes = {'Cu','Nu'}
 end
 params.nPrimChoices = #params.primTypes
-local meshSaveIter = params.meshSaveIter
 params.intrinsicReward = torch.Tensor(#params.primTypes):fill(0)
 for p=1,#params.primTypes do
     if(params.primTypes[p] == 'Nu') then params.intrinsicReward[p] = -params.nullReward end
@@ -116,6 +112,7 @@ for k,v in pairs(params) do
     fout:write(string.format('%s : %s\n',tostring(k),tostring(v)))
 end
 print(params)
+local meshSaveIter = params.meshSaveIter
 
 local function pgenFuncTsdf(nP)
     return primitives.primitiveSelector(params.primTypes, nP)
@@ -172,14 +169,14 @@ tsdfComputerTest = tsdfComputerTest:cuda()
 -- Modules for Loss function via Chamfer Distance on Samples
 local surfaceSamplerModule = transformerSurface.partComposition(pgenFuncSurface, params.nParts, params.nSamplesChamfer)
 
-local chamferCriterion = chamferUtils.ChamferCriterion(surfaceSamplerModule, params.nParts*params.nSamplesChamfer, params.chamferIndep)
+local chamferCriterion = chamferUtils.ChamferCriterion(surfaceSamplerModule, params.nParts*params.nSamplesChamfer)
 
 --------------------------------------------------------------
 --------------------------------------------------------------
 -- Modules for Symmetry Loss function
 local surfaceSamplerModuleSym = transformerSurface.partComposition(pgenFuncSurface, params.nParts, params.nSamplesChamfer)
 local tsdfComputerSym = nn.Sequential():add(transformer.partComposition(pgenFuncTsdf, params.nParts, params.nParts*params.nSamplesChamfer))
-local symCriterion = symUtils.SymmetryCriterion(surfaceSamplerModuleSym, tsdfComputerSym, params.nParts*params.nSamplesChamfer, params.chamferIndep)
+local symCriterion = symUtils.SymmetryCriterion(surfaceSamplerModuleSym, tsdfComputerSym, params.nParts*params.nSamplesChamfer)
 
 --------------------------------------------------------------
 --------------------------------------------------------------

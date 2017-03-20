@@ -13,21 +13,15 @@ setmetatable(ChamferCriterion, {
     end,
 })
 
-function ChamferCriterion.new(pointSamplerModule, nSamples, indepLoss)
+function ChamferCriterion.new(pointSamplerModule, nSamples)
     local self = setmetatable({}, ChamferCriterion)
     self.pointSamplerModule = pointSamplerModule
     self.nSamples = nSamples
-    self.indepLoss = indepLoss
     --
-    if indepLoss then
-        self.normWeightsModule = nn.Sequential():add(nn.MulConstant(1/nSamples))
-    else
-        local impWeights = - nn.Identity()
-        local totWeights = impWeights - nn.Sum(2) - nn.AddConstant(1e-6) - nn.Replicate(nSamples,2) --constant handles cases where all parts are null parts
-        local normWeights = {impWeights, totWeights} - nn.CDivTable()
-        self.normWeightsModule = nn.gModule({impWeights}, {normWeights})
-    --
-    end
+    local impWeights = - nn.Identity()
+    local totWeights = impWeights - nn.Sum(2) - nn.AddConstant(1e-6) - nn.Replicate(nSamples,2) --constant handles cases where all parts are null parts
+    local normWeights = {impWeights, totWeights} - nn.CDivTable()
+    self.normWeightsModule = nn.gModule({impWeights}, {normWeights})
     
     return self
 end
@@ -64,12 +58,6 @@ function ChamferCriterion:backward(input, dataLoader)
     --print(self.samples[1], self.impWeights[1], self.normWeights[1],gradSamples[1], gradImp[1])
     
     self.gradInput = self.pointSamplerModule:updateGradInput(input, {gradSamples, gradImp})
-    --print(self.gradInput[1][1][1]:view(1,-1), self.gradInput[1][2][1]:view(1,-1), self.gradInput[1][3][1]:view(1,-1))
-    --print(self.gradInput[2][1][1]:view(1,-1), self.gradInput[2][2][1]:view(1,-1), self.gradInput[2][3][1]:view(1,-1))
-    --print(self.gradInput[3][1][1]:view(1,-1), self.gradInput[3][2][1]:view(1,-1), self.gradInput[3][3][1]:view(1,-1))
-    --print(self.gradInput[4][1][1]:view(1,-1), self.gradInput[4][2][1]:view(1,-1), self.gradInput[4][3][1]:view(1,-1))
-    --print(self.gradInput[5][1][1]:view(1,-1), self.gradInput[5][2][1]:view(1,-1), self.gradInput[5][3][1]:view(1,-1))
-    --print(self.gradInput[6][1][1]:view(1,-1), self.gradInput[6][2][1]:view(1,-1), self.gradInput[6][3][1]:view(1,-1))
     return self.gradInput
 end
 -------------------------------

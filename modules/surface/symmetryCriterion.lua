@@ -24,23 +24,17 @@ setmetatable(SymmetryCriterion, {
     end,
 })
 
-function SymmetryCriterion.new(pointSamplerModule, tsdfModule, nSamples, indepLoss)
+function SymmetryCriterion.new(pointSamplerModule, tsdfModule, nSamples)
     local self = setmetatable({}, SymmetryCriterion)
     self.pointSamplerModule = pointSamplerModule
     self.tsdfModule = tsdfModule
     self.nSamples = nSamples
-    self.indepLoss = indepLoss
  
     --
-    if indepLoss then
-        self.normWeightsModule = nn.Sequential():add(nn.MulConstant(1/nSamples))
-    else
-        local impWeights = - nn.Identity()
-        local totWeights = impWeights - nn.Sum(2) - nn.AddConstant(1e-6) - nn.Replicate(nSamples,2) --constant handles cases where all parts are null parts
-        local normWeights = {impWeights, totWeights} - nn.CDivTable()
-        self.normWeightsModule = nn.gModule({impWeights}, {normWeights})
-    end
-    --
+    local impWeights = - nn.Identity()
+    local totWeights = impWeights - nn.Sum(2) - nn.AddConstant(1e-6) - nn.Replicate(nSamples,2) --constant handles cases where all parts are null parts
+    local normWeights = {impWeights, totWeights} - nn.CDivTable()
+    self.normWeightsModule = nn.gModule({impWeights}, {normWeights})
     
     return self
 end
