@@ -98,28 +98,11 @@ local function partComposition(primitiveGenerator, nParts, nPoints)
     local gmod = nn.gModule({points, shapeParams}, {tsdfOut})
     return gmod
 end
-
-
-local function imgFrameTransformer(primitiveGenerator, nParts, nPoints)
-    local points = - nn.Identity()
-    local pred = - nn.Identity()
-    
-    local globalRot = pred - nn.SelectTable(1)
-    local rotatedPts = {points, globalRot} - rotation(nPoints)
-    
-    local predShapeCanonical = pred - nn.SelectTable(2)
-    local predTsdf = {rotatedPts, predShapeCanonical} - partComposition(primitiveGenerator, nParts, nPoints)
-
-    nngraph.annotateNodes()
-    local gmod = nn.gModule({points, pred}, {predTsdf})
-    return gmod
-end
 -------------------------------
 -------------------------------
 M.rotation = rotation
 M.translation = translation
 M.rigidTsdf = M.rigidTsdf
 M.tsdfTransform = tsdfTransform
-M.imgFrameTransformer = imgFrameTransformer
 M.partComposition = partComposition
 return M

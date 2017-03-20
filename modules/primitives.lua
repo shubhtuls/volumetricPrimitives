@@ -20,33 +20,6 @@ local function cuboid(nP)
     return gmod
 end
 
-local function cuboidInterior(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    local pAbs = points - nn.Abs()
-    
-    local dimsRep = dims - nn.Replicate(nP,2)
-    local tsdfSq = {dimsRep, pAbs} - nn.CSubTable() - nn.ReLU() - nn.Min(3) - nn.Power(2)
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
--------------------------------
--------------------------------
--- input is BXnPX3 points, BX2 plane dimensions
--- output is BXnP tsdf^2 values
-local function plane(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    --using a ReLU kill gradients at 0 !
-    local pZ2 = points - nn.Abs() - nn.ReLU() - nn.Narrow(3,3,1) - nn.Power(2) - nn.Sum(3)
-    local pXYAbs =  points - nn.Narrow(3,1,2) - nn.Abs()
-    
-    local dimsRep = dims - nn.Replicate(nP,2)
-    local tsdfXY = {pXYAbs,dimsRep} - nn.CSubTable() - nn.ReLU() - nn.Power(2) - nn.Sum(3)
-    local tsdfSq = {tsdfXY, pZ2} - nn.CAddTable()
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
 -------------------------------
 -------------------------------
 -- input is BXnPX3 points, BX1 cuboid dimensions
@@ -62,95 +35,13 @@ local function null(nP)
     return gmod
 end
 
--- input is BXnPX3 points, BX1 cuboid dimensions
--- output is BXnP tsdf^2 values, all of which are set to 0.
-local function nullInterior(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    --Add a ReLU as it blocks gradients
-    local pAbs = points - nn.MulConstant(0) - nn.Sum(3) - nn.AddConstant(-1) - nn.ReLU()
-    local dimsRep = dims - nn.Sum(2) - nn.MulConstant(0) - nn.AddConstant(-1) - nn.ReLU() - nn.Replicate(nP,2)
-    local tsdfSq = {pAbs,dimsRep} - nn.CAddTable() - nn.AddConstant(0)
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
--------------------------------
--------------------------------
--- input is BXnPX3 points, BX2 cylinder sizes
--- output is BXnP tsdf^2 values
-local function cylinder(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    local pXY2 = points - nn.Narrow(3,1,2) - nn.Power(2) - nn.Sum(3)
-    local pZ = points - nn.Narrow(3,3,1) - nn.Abs()
-    
-    local dimsRep = dims - nn.Replicate(nP,2)
-    local dimsR2 = dimsRep - nn.Narrow(3,1,1) - nn.Power(2) - nn.Sum(3)
-    local dimsZ = dimsRep - nn.Narrow(3,2,1)
-    
-    local rSqDiff = {pXY2,dimsR2} - nn.CSubTable() - nn.ReLU()
-    local zSqDiff = {pZ,dimsZ} - nn.CSubTable() - nn.ReLU() - nn.Power(2) - nn.Sum(3)
-    
-    local tsdfSq = {rSqDiff,zSqDiff} - nn.CAddTable()
-    
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
-
-local function cylinderInterior(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    local pXY2 = points - nn.Narrow(3,1,2) - nn.Power(2) - nn.Sum(3)
-    local pZ = points - nn.Narrow(3,3,1) - nn.Abs()
-    
-    local dimsRep = dims - nn.Replicate(nP,2)
-    local dimsR2 = dimsRep - nn.Narrow(3,1,1) - nn.Power(2) - nn.Sum(3)
-    local dimsZ = dimsRep - nn.Narrow(3,2,1)
-    
-    local rSqDiff = {dimsR2, pXY2} - nn.CSubTable() - nn.ReLU() - nn.Unsqueeze(3)
-    local zSqDiff = {dimsZ, pZ} - nn.CSubTable() - nn.ReLU() - nn.Power(2)
-    
-    local tsdfSq = {rSqDiff,zSqDiff} - nn.JoinTable(3) - nn.Min(3)
-    
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
-
-local function cylinderHollow(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    local sdfIn = {points, dims} - cylinderInterior(nP)
-    local sdfOut = {points, dims} - cylinder(nP)
-    local tsdfSq = {sdfIn,sdfOut} - nn.CAddTable()
-    
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
-
-local function cuboidHollow(nP)
-    local points = - nn.Identity()
-    local dims = - nn.Identity()
-    local sdfIn = {points, dims} - cuboidInterior(nP)
-    local sdfOut = {points, dims} - cuboid(nP)
-    local tsdfSq = {sdfIn,sdfOut} - nn.CAddTable()
-    
-    local gmod = nn.gModule({points, dims}, {tsdfSq})
-    return gmod
-end
-
 -------------------------------
 -------------------------------
 local function primitiveModule(key, nP)
     if(key == 'Cu') then
         return cuboid(nP), 3
-    elseif(key == 'Cy') then
-        return cylinder(nP), 2
     elseif(key=='Nu') then
         return null(nP), 1
-    elseif(key == 'Cu_H') then
-        return cuboidHollow(nP), 3
-    elseif(key == 'Cy_H') then
-        return cylinderHollow(nP), 2
     else
         error("invalid input")
     end
@@ -315,52 +206,10 @@ local function primitiveSelectorTable(params, outChannels, biasTerms)
     return primitivesTable
 end
 
-local function shapeParamsEncoder(params, nDimsOut)
-    local encoder = nn.Sequential():add(nn.JoinTable(2)):add(nn.Unsqueeze(3)):add(nn.Unsqueeze(4)):add(nn.Unsqueeze(5))
-    local nDimsIn = 3 + 4 + params.nz
-    if(params.nPrimChoices > 1) then nDimsIn = nDimsIn + params.nPrimChoices end
-    
-    for nLayer=1,2 do -- fc layers for joint reasoning
-        encoder:add(nn.VolumetricConvolution(nDimsIn, nDimsOut, 1, 1, 1))
-        if(params.useBn) then encoder:add(nn.VolumetricBatchNormalization(nDimsOut)) end
-        encoder:add(nn.LeakyReLU(0.2, true))
-        nDimsIn = nDimsOut
-    end
-    encoder:apply(nUtils.weightsInit)
-    return encoder
-end
-
-local function primitiveSelectorTableConditional(params, outChannels, biasTerms)
-    local outParts = {}
-    local conditionalFeat = {}
-    local shapeEncDim = 15
-    
-    local feat = - nn.Identity()
-    for p=1,params.nParts do
-        local featIn
-        if(p==1) then featIn = feat else featIn = conditionalFeat[p-1] end
-        outParts[p] = featIn - primitiveSelectorPred(params, outChannels + (p-1)*shapeEncDim, biasTerms)
-        if(p < params.nParts) then
-            local shapeEnc_p = outParts[p] - shapeParamsEncoder(params, shapeEncDim)
-            conditionalFeat[p] = {featIn, shapeEnc_p} - nn.JoinTable(2)
-        end
-    end
-    local gMod = nn.gModule({feat}, outParts)
-    return gMod
-end
 -------------------------------
 -------------------------------
 M.cuboid = cuboid
-M.cuboidInterior = cuboidInterior
-M.cuboidHollow = cuboidHollow
-
-M.cylinder = cylinder
-M.cylinderInterior = cylinderInterior
-M.cylinderHollow = cylinderHollow
-
-M.plane = plane
 M.null = null
-M.nullInterior = nullInterior
 
 M.primitiveSelector = primitiveSelector
 M.meshGrid = meshGrid
@@ -368,5 +217,4 @@ M.quatPred = quatPred
 M.primitivePred = primitivePred
 M.primitiveSelectorPred = primitiveSelectorPred
 M.primitiveSelectorTable = primitiveSelectorTable
-M.primitiveSelectorTableConditional = primitiveSelectorTableConditional
 return M

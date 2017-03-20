@@ -93,7 +93,6 @@ local function primitiveSurfaceSamples(samplerModule, nSamples)
     
     local gmod = nn.gModule({part}, {transformedSamples, sampleImportance})
     return gmod
-
 end
 -------------------------------
 -------------------------------
