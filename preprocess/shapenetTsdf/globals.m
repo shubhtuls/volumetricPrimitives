@@ -1,0 +1,3 @@
+global cachedir
+global basedir
+global shapenetDir
