@@ -2,7 +2,7 @@
 --disp=0 gpu=1 nParts=20 nullReward=0 lossPower=2 shapeLrDecay=0.01 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.0001 usePretrain=0 nSamplesChamfer=150 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 
 -- sample script for chair training (stage 2)
---disp=0 gpu=1 nParts=20 nullReward=8e-5 lossPower=2 shapeLrDecay=0.5 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.0001 usePretrain=1 nSamplesChamfer=150 numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
+--disp=0 gpu=1 nParts=20 nullReward=8e-5 lossPower=2 shapeLrDecay=0.5 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.2 usePretrain=1 nSamplesChamfer=150 numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 
 require 'cunn'
 require 'nngraph'
