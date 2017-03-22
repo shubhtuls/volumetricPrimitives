@@ -20,6 +20,16 @@ local function cuboid(nP)
     return gmod
 end
 
+local function cuboidInterior(nP)
+    local points = - nn.Identity()
+    local dims = - nn.Identity()
+    local pAbs = points - nn.Abs()
+    
+    local dimsRep = dims - nn.Replicate(nP,2)
+    local tsdfSq = {dimsRep, pAbs} - nn.CSubTable() - nn.ReLU() - nn.Min(3) - nn.Power(2)
+    local gmod = nn.gModule({points, dims}, {tsdfSq})
+    return gmod
+end
 -------------------------------
 -------------------------------
 -- input is BXnPX3 points, BX1 cuboid dimensions
@@ -35,6 +45,18 @@ local function null(nP)
     return gmod
 end
 
+-- input is BXnPX3 points, BX1 cuboid dimensions
+-- output is BXnP tsdf^2 values, all of which are set to 0.
+local function nullInterior(nP)
+    local points = - nn.Identity()
+    local dims = - nn.Identity()
+    --Add a ReLU as it blocks gradients
+    local pAbs = points - nn.MulConstant(0) - nn.Sum(3) - nn.AddConstant(-1) - nn.ReLU()
+    local dimsRep = dims - nn.Sum(2) - nn.MulConstant(0) - nn.AddConstant(-1) - nn.ReLU() - nn.Replicate(nP,2)
+    local tsdfSq = {pAbs,dimsRep} - nn.CAddTable() - nn.AddConstant(0)
+    local gmod = nn.gModule({points, dims}, {tsdfSq})
+    return gmod
+end
 -------------------------------
 -------------------------------
 local function primitiveModule(key, nP)
@@ -210,6 +232,8 @@ end
 -------------------------------
 M.cuboid = cuboid
 M.null = null
+M.cuboidInterior = cuboidInterior
+M.nullInterior = nullInterior
 
 M.primitiveSelector = primitiveSelector
 M.meshGrid = meshGrid

@@ -33,65 +33,6 @@ local function triliniearCoeff(p, cubPoints)
     
 end
 
-local function cylMesh(shape)
-    local radius = shape[1]
-    local height = shape[2]
-    local nCircleVerts = 20
-    local nVerts = 2*nCircleVerts + 2 --two centre vertices
-    local nTri = 4*nCircleVerts
-
-    local verts = torch.Tensor(nVerts,3):fill(0)
-    local faces = torch.Tensor(nTri,3):fill(0)
-
-    -- vertices
-    verts[1][3] = height
-    verts[2][3] = -height
-    local theta = 2*math.pi/nCircleVerts
-
-    for v = 1,nCircleVerts do
-        verts[2+v][3] = height
-        verts[2+v][1] = math.cos(v*theta)*radius
-        verts[2+v][2] = math.sin(v*theta)*radius
-    end
-
-    for v = 1+nCircleVerts,2*nCircleVerts do
-        verts[2+v][3] = -height
-        verts[2+v][1] = math.cos(v*theta + theta/2)*radius
-        verts[2+v][2] = math.sin(v*theta + theta/2)*radius
-    end
-
-    -- faces
-    local nf = 1
-    for v=1,nCircleVerts do
-        faces[nf][1] = 1
-        faces[nf][2] = 2 + v
-        faces[nf][3] = 2 + ((v==nCircleVerts) and 1 or v+1)
-        nf = nf+1
-    end
-
-    for v=1,nCircleVerts do
-        faces[nf][1] = 2
-        faces[nf][3] = 2 + nCircleVerts + v
-        faces[nf][2] = 2 + nCircleVerts + ((v==nCircleVerts) and 1 or v+1)
-        nf = nf+1
-    end
-
-    for v=1,nCircleVerts do
-        faces[nf][1] = 2 + v
-        faces[nf][2] = 2 + nCircleVerts + v
-        faces[nf][3] = 2 + ((v==nCircleVerts) and 1 or v+1)
-        nf = nf+1
-    end
-
-    for v=1,nCircleVerts do
-        faces[nf][1] = 2 + nCircleVerts + ((v==1) and nCircleVerts or (v-1))
-        faces[nf][3] = 2 + v
-        faces[nf][2] = 2 + nCircleVerts + v
-        nf = nf+1
-    end
-    return verts, faces
-end
-
 local function cuboidMesh(shape)
     local verts = cubeV:clone()
     for d=1,3 do
@@ -113,7 +54,6 @@ local function shapeMesh(shape, primTypes)
         for ix = 1,#primTypes do
             local primSize = 0
             if(primTypes[ix] == 'Cu') then primSize = 3 end
-            if(primTypes[ix] == 'Cy') then primSize = 2 end
             if(primTypes[ix] == 'Nu') then primSize = 1 end
             primSizes[ix] = primSize
             primStarts[ix] = nz+1
@@ -131,9 +71,6 @@ local function shapeMesh(shape, primTypes)
         
     if(shapeType=='Cu') then
         return cuboidMesh(shapeParams)
-    end
-    if(shapeType=='Cy') then
-        return cylMesh(shapeParams)
     end
     if(shapeType=='Nu') then
         return torch.Tensor(), torch.Tensor()
@@ -157,7 +94,6 @@ local function shapeVolume(shape, primTypes)
         for ix = 1,#primTypes do
             local primSize = 0
             if(primTypes[ix] == 'Cu') then primSize = 3 end
-            if(primTypes[ix] == 'Cy') then primSize = 2 end
             if(primTypes[ix] == 'Nu') then primSize = 1 end
             primSizes[ix] = primSize
             primStarts[ix] = nz+1
@@ -175,9 +111,6 @@ local function shapeVolume(shape, primTypes)
         
     if(shapeType=='Cu') then
         return 8*shapeParams[1]*shapeParams[2]*shapeParams[3]
-    end
-    if(shapeType=='Cy') then
-        return 2*math.pi*shapeParams[1]*shapeParams[1]*shapeParams[2]
     end
     if(shapeType=='Nu') then
         return 0
@@ -214,12 +147,11 @@ end
 local function saveParts(predParts, outputFile, primTypes, partIndsSpecific)
     local primTypes = primTypes
     if(primTypes == nil) then primTypes = {'Cu'} end
-    local mtlFile = outputFile:split('.obj')[1] .. '.mtl'
+    local mtlFile = outputFile:split('.obj$')[1] .. '.mtl'
     local fout = io.open(outputFile, 'w')
     local foutMtl = io.open(mtlFile, 'w')
     local partIndsSpecific = partIndsSpecific or {}
-    mtlFile = mtlFile:split('/')
-    mtlFile = mtlFile[#mtlFile]    
+    mtlFile = mtlFile:split('/'); mtlFile = mtlFile[#mtlFile]    
     --print(outputFile)
     local partCmaps = {}
     local fCounter = 0
@@ -240,7 +172,9 @@ local function saveParts(predParts, outputFile, primTypes, partIndsSpecific)
     for px = 1,#partIndsSpecific do
         local p = partIndsSpecific[px]
         local shape, translation, quat = unpack(predParts[p])
-        quat = quat:clone()
+        shape = shape:view(-1)
+        translation = translation:view(-1)
+        quat = quat:clone():view(-1)
         quat[1] = -quat[1]
         local verts, faces = shapeMesh(shape, primTypes)
         if(verts:numel() > 0) then
@@ -286,7 +220,7 @@ local function savePoints(points, outputFile)
 end
 
 local function renderMesh(blendFile, meshFile, pngFile)
-    local command = string.format('/home/eecs/shubhtuls/Downloads/renderer/render.sh %s %s %s',blendFile,meshFile,pngFile)
+    local command = string.format('bash ../renderer/render.sh %s %s %s',blendFile,meshFile,pngFile)
     --print(command)
     os.execute(command)
 end
@@ -303,7 +237,7 @@ local function writeObj(meshFile, vertices, faces)
 end
 
 local function saveParse(meshFile, vertices, faces, faceInds, nParts)
-    local mtlFile = meshFile:split('.obj')[1] .. '.mtl'
+    local mtlFile = meshFile:split('.obj$')[1] .. '.mtl'
     local fout = io.open(meshFile, 'w')
     local foutMtl = io.open(mtlFile, 'w')
     
@@ -314,6 +248,7 @@ local function saveParse(meshFile, vertices, faces, faceInds, nParts)
         foutMtl:write(string.format('newmtl m%d\nKd %f %f %f\nKa 0 0 0\n',p,partCmaps[p][1], partCmaps[p][2],partCmaps[p][3]))
     end
     foutMtl:close()
+    mtlFile = mtlFile:split('/'); mtlFile = mtlFile[#mtlFile];
     fout:write(string.format('mtllib %s\n',mtlFile))
     
     for vx = 1,vertices:size(1) do
@@ -333,7 +268,7 @@ end
 
 
 local function saveParseSpecificPart(meshFile, vertices, faces, faceInds, nParts, chosenPart)
-    local mtlFile = meshFile:split('.obj')[1] .. '.mtl'
+    local mtlFile = meshFile:split('.obj$')[1] .. '.mtl'
     local fout = io.open(meshFile, 'w')
     local foutMtl = io.open(mtlFile, 'w')
     
@@ -348,6 +283,7 @@ local function saveParseSpecificPart(meshFile, vertices, faces, faceInds, nParts
         end
     end
     foutMtl:close()
+    mtlFile = mtlFile:split('/'); mtlFile = mtlFile[#mtlFile];
     fout:write(string.format('mtllib %s\n',mtlFile))
     
     for vx = 1,vertices:size(1) do
@@ -386,14 +322,14 @@ end
 
 local function saveVoxelsMesh(predVol, meshFile, thresh)
     local fCounter = 0
-    local mtlFile = meshFile:split('.obj')[1] .. '.mtl'
+    local mtlFile = meshFile:split('.obj$')[1] .. '.mtl'
     local outputFile = meshFile
     local fout = io.open(outputFile, 'w')
     local foutMtl = io.open(mtlFile, 'w')
-    
     foutMtl:write(string.format('newmtl m0\nKd %f %f %f\nKa 0 0 0\n', 0.5,0.5,0.5))
     local matName = string.format('m0',p)
-
+    
+    mtlFile = mtlFile:split('/'); mtlFile = mtlFile[#mtlFile];
     fout:write(string.format('mtllib %s\n',mtlFile))
     local maxDim = 0.5
     --print(predVol:size())
