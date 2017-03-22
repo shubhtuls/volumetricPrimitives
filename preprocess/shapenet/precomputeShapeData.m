@@ -1,18 +1,17 @@
-function [] = precomputeChamferData()
+function [] = precomputeShapeData()
 globals;
 shapenetDir = shapenetDir;
 cachedir = cachedir;
 params = params;
 vis = 0;
 %loop over sysnets
-synsetNames = {'03001627.csv','02691156.csv'}; %chair, aeroplane
-%synsetNames = {'0quadrapeds.csv'}; shapenetDir = '/data1/shubhtuls/code/shapeAssembly/cachedir/';%animals
+synsetNames = {'03001627','02691156'}; %chair, aeroplane
 gridSize=32;
 numSamples = 10000;
 
 for s = 1:length(synsetNames)
     fprintf('synset : %d/%d\n\n',s,length(synsetNames));
-    synset = synsetNames{s}(1:end-4);
+    synset = synsetNames{s};
     modelsDir = fullfile(shapenetDir,synset);
     tsdfDir = fullfile(cachedir,'shapenet','chamferData',synset);
     mkdirOptional(tsdfDir);
@@ -39,11 +38,6 @@ for s = 1:length(synsetNames)
         modelFile = fullfile(modelsDir,modelNames{i},modelFile{1});
         %try
         [Shape] = parseObjMesh(modelFile);
-        if(strcmp(synset, '0quadrapeds'))
-            Shape.vertexPoss = Shape.vertexPoss([2, 3, 1],:);
-            scale = 0.45/max(max(abs(Shape.vertexPoss)));
-            Shape.vertexPoss = Shape.vertexPoss*scale;
-        end
         
         surfaceSamples = uniform_sampling(Shape, numSamples);
         surfaceSamples = surfaceSamples';
@@ -55,9 +49,6 @@ for s = 1:length(synsetNames)
         %% Compute Voxels
         faces = Shape.faceVIds';
         vertices = Shape.vertexPoss';
-        %keyboard;
-        %vertices = vertices - repmat(mean(vertices,1),size(vertices,1),1);
-        %querypoints = [0,0,0];
         stepRange = -0.5+1/(2*gridSize):1/gridSize:0.5-1/(2*gridSize);
         [Xp,Yp,Zp] = ndgrid(stepRange, stepRange, stepRange);
         queryPoints = [Xp(:), Yp(:), Zp(:)];
@@ -69,33 +60,13 @@ for s = 1:length(synsetNames)
 
         Volume=polygon2voxel(FV,gridSize,'none',false);
         
-        %tsdfPoints = signed_distance(queryPoints,vertices,faces);
-        %tsdfGrid = reshape(tsdfPoints,size(Xp));
-        %tsdfGrid = abs(tsdfGrid).*(1-2*Volume);
-        
         [tsdfPoints,~,closestPoints] = point_mesh_squared_distance(queryPoints,vertices,faces);
         tsdfPoints = sqrt(tsdfPoints);
         tsdfGrid = reshape(tsdfPoints,size(Xp));
         tsdfGrid = abs(tsdfGrid).*(1-2*Volume);
         closestPointsGrid = reshape(closestPoints,[size(Xp),3]);
         
-        %disp(tsdf)
-        %keyboard;
-        %visVoxels(tsdfGrid);close all;
-        
-        %p = patch(isosurface(Xp,Yp,Zp,tsdfGrid,0.05));
-        %p.FaceColor = 'red';
-        %p.EdgeColor = 'none';
-        %daspect([1,1,1])
-        %view(3); axis tight
-        %camlight 
-        %lighting gouraud; xlabel('x'); ylabel('y'); zlabel('z');
-        %pause();close 'all';
-    
-        %catch
-        %    continue
-        %end
-        savefunc(tsdfFile, tsdfGrid, Volume, closestPointsGrid, surfaceSamples);
+        savefunc(tsdfFile, tsdfGrid, Volume, closestPointsGrid, surfaceSamples, vertices, faces);
         pBar.progress();
     end
     pBar.stop();
@@ -103,8 +74,8 @@ end
 
 end
 
-function savefunc(tsdfFile, tsdf, Volume, closestPoints, surfaceSamples)
-save(tsdfFile,'tsdf','Volume','closestPoints', 'surfaceSamples');
+function savefunc(tsdfFile, tsdf, Volume, closestPoints, surfaceSamples, vertices, faces)
+save(tsdfFile,'tsdf','Volume','closestPoints', 'surfaceSamples','vertices','faces');
 end
 
 function [samples] = uniform_sampling(Shape, numSamples)
