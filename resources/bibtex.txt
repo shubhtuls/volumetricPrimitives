@@ -1,0 +1,6 @@
+@inProceedings{abstractionTulsiani17,
+  title={Learning Shape Abstractions by Assembling Volumetric Primitives},
+  author = {Shubham Tulsiani and Hao Su and Leonidas J. Guibas and Alexei A. Efros and Jitendra Malik},
+  booktitle={Computer Vision and Pattern Regognition (CVPR)},
+  year={2017}
+}

@@ -118,6 +118,7 @@
     <br>
           <center>
           	<span style="font-size:42px">Learning Shape Abstractions <br> by Assembling Volumetric Primitives</span>
+						<br><br>
 	  		  <table align=center width=900px>
 	  			  <tr>
 							<td align=center width=100px>
@@ -146,6 +147,7 @@
 	</center>
 	</td>
 			  </table>
+				<br>
 
 	  		  <table align=center width=500px>
 	  			  <tr>
@@ -184,24 +186,12 @@
 
       	  <br>
 		  <hr>
-  		  <table align=center width=850px>
-	  		  <center><h1>Abstract</h1></center>
-	  		  <tr>
-	  		  	<td>
-<!-- 					Given a grayscale photograph as input, this paper attacks the problem of hallucinating a <i>plausible</i> color version of the photograph. This problem is clearly underconstrained, so previous approaches have either relied on significant user interaction or resulted in desaturated colorizations. We propose a fully automatic approach that produces vibrant and realistic colorizations. We embrace the underlying uncertainty of the problem by posing it as a classification task and explore using class-rebalancing at training time to increase the diversity of colors in the result. The system is implemented as a feed-forward operation in a CNN at test time and is trained on over a million color images. We evaluate our algorithm using a "colorization Turing test", asking human subjects to choose between a generated and ground truth color image. Our method successfully fools humans 20% of the time, significantly higher than previous methods. -->
-	  		    </td>
-	  		  </tr>
-			</table>
-
 			We present a learning framework for abstracting complex shapes by learning to assemble objects using 3D volumetric primitives. In addition to generating simple and geometrically interpretable explanations of 3D objects, our framework also allows us to automatically discover and exploit consistent structure in the data. We demonstrate that using our method allows predicting shape representations which can be leveraged for obtaining a consistent parsing across the instances of a shape collection and constructing an interpretable shape similarity measure. We also examine applications for image-based prediction as well as shape manipulation.
-
-<!-- 					Given a grayscale photograph as input, this paper attacks the problem of hallucinating a <i>plausible</i> color version of the photograph. This problem is clearly underconstrained, so previous approaches have either relied on significant user interaction or resulted in desaturated colorizations. We propose a fully automatic approach that produces vibrant and realistic colorizations. We embrace the underlying uncertainty of the problem by posing it as a classification task and explore using class-rebalancing at training time to increase the diversity of colors in the result. The system is implemented as a feed-forward operation in a CNN at test time and is trained on over a million color images. We evaluate our algorithm using a "colorization Turing test", asking human subjects to choose between a generated and ground truth color image. Our method successfully fools humans 20% of the time, significantly higher than previous methods. -->
-
   		  <br><br>
 		  <hr>
 
 	  <!-- NETWORK ARCHITECTURE, TRY THE MODEL -->
- 		<center><h1>Try our code</h1></center>
+ 		<center><h1>Code</h1></center>
   		  <table align=center width=1000px>
   			  <tr>
   	              <td align=center width=750px>
@@ -246,58 +236,55 @@
 		  <table align=center width=600px>
 			  <tr>
 				  <td><span style="font-size:14pt"><center>
-				  	<a href="./resources/bibtex_eccv2016_colorization.txt">[Bibtex]</a>
+				  	<a href="./resources/bibtex.txt">[Bibtex]</a>
   	              </center></td>
               </tr>
   		  </table>
 
 		  <hr>
 
-  		  <a name="bw_legacy"></a>
-  		  <center><h1>Application : Unsupervised Parsing and Correspondence</h1></center>
-  		  <!-- along with miscellaneous photos. -->
-  		  <br>
-				<table align=center width=850px>
-  			  <tr>
-  	              <td width=500px>
-  					<center>
-  	                	<a href="./resources/images/parsing.png"><img src = "./resources/images/parsing.png" height="350px"></img></href></a><br>
-					</center>
-  	              </td>
-                </tr>
-  	              <td width=400px>
-  					<center>
-  	                	<span style="font-size:14px"><i>Projection of the predicted primitives onto the original shape. We assign each point in the original mesh to the primitive with lowest distance field. We visualize the parsing by coloring each point according to the assigned primitive. We see that similar parts e.g. aeroplane wings, chair seat, etc. are consistently colored.</i>
-					</center>
-  	              </td>
+			<a name="applications"></a>
+			<center><h1>Applications</h1></center>
+			Our framework allows us to automatically discover descriptive, consistent and interpretable shape abstractions using a collection of 3D models and enables several applications.
 
-  		  </table>
-  		<br><br>
-  	  	<hr>
-
-  		  <a name="perform_comp"></a>
-  		  <center><h1>Application : Interpretable Shape Similarity</h1></center>
-				<br>
-				<table align=center width=850px>
-  			  <tr>
-  	              <td width=500px>
-  					<center>
-  	                	<a href="./resources/images/embedding.png"><img src = "./resources/images/embedding.png" height="250px"></img></href></a><br>
+			<br><br><br>
+			<table align=center width=1100px>
+				<tr>
+					<td width=300px>
+						<center> <span align="top" style="font-size:20px">Unsupervised Correspondence</a></span><br> </center>
+					</td>
+					<td width=300px>
+						<center> <span align="top" style="font-size:20px">Interpretable Shape Similarity</a></span><br> </center>
+					</td>
+					<td width=300px>
+						<center> <span align="top" style="font-size:20px">Shape Manipulation</a></span><br> </center>
+					</td>
+				</tr>
+				<tr height="300px">
+								<td valign="top" width=300px>
+					<center>
+										<a href="./resources/images/parsing.png"><img img src = "./resources/images/parsing.png" height = "150px"></a><br>
+					<span style="font-size:14px">Unsupervised parsing obtained by assigning each mesh point to the closest primitive. We see that similar parts e.g. aeroplane wings, chair seat, etc. are consistently parsed.</span><br>
 					</center>
-  	              </td>
-                </tr>
-  	              <td width=400px>
-  					<center>
-  	                	<span style="font-size:14px"><i>Embeddings computed using various distance measures - a) Voxel IoU based distance b) Ours (all primitives) c) Ours (chair back, seat primitives) d) Ours (chair back orientation). While the IoU based embedding conflates chairs different fine level structure (e.g. with/without handles), our embedding using all primitives encodes them separately. Additionally, unlike common shape representations, our inferred abstractions give us control over similarity measures – we can choose to consider only specific primitives if required e.g. chair back and seat which, as expected, results in ignoring existence of chair handles. We can also focus on specific properties e.g. chair back orientation and observe a 1D manifold emerge in this scenario.</i>
+								</td>
+								<td  valign="top" width=300px>
+					<center>
+						<a href="./resources/images/embedding.png"><img img src = "./resources/images/embeddingSq.png" height = "250px"></a><br>
+	<span style="font-size:14px">Embeddings obtained using various similarity measures - a) Voxel IoU b) Ours (all primitives) c) Ours (seat and back primitives) d) Ours (back primitive orientation). </span><br>
 					</center>
-  	              </td>
+								</td>
+								<td  valign="top" width=250px>
+					<center>
+						<a href="./resources/images/manipulation.png"><img img src = "./resources/images/manipulation.png" height = "120px"></a><br>
+	<span style="font-size:14px">Deformation of the source mesh (top) to have a shape similar to the target mesh (bottom) by using the inferred primitive representation.</span><br>
+					</center>
+								</td>
 
-  		  </table>
+							</tr>
+			</table>
+
 		<br><br>
-  	  	<hr>
-
-
-
+			<hr>
   		  <table align=center width=1100px>
   			  <tr>
   	              <td width=400px>
