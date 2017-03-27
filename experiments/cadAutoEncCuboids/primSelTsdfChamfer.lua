@@ -1,8 +1,8 @@
 -- sample script for chair training (stage 1)
---disp=0 gpu=1 nParts=20 nullReward=0 lossPower=2 shapeLrDecay=0.01 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.0001 usePretrain=0 nSamplesChamfer=150 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 th cadAutoEncCuboids/primSelTsdfChamfer.lua
+--disp=0 gpu=1 nParts=20 nullReward=0 probLrDecay=0.0001 shapeLrDecay=0.01 synset=3001627 usePretrain=0 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 
 -- sample script for chair training (stage 2)
---disp=0 gpu=1 nParts=20 nullReward=8e-5 lossPower=2 shapeLrDecay=0.5 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.2 usePretrain=1 nSamplesChamfer=150 numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
+--pretrainNet=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 pretrainIter=20000 disp=0 gpu=1 nParts=20 nullReward=8e-5 shapeLrDecay=0.5   synset=3001627 probLrDecay=0.2 usePretrain=1  numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 
 require 'cunn'
 require 'nngraph'
@@ -38,8 +38,7 @@ params.learningRate = 0.001
 params.meshSaveIter = 1000
 params.numTrainIter = 50000
 params.batchSize = 32
-params.batchSizeVis = 8
-params.rndSeed = 0
+params.batchSizeVis = 4
 params.visPower = 0.25
 params.lossPower = 2
 params.chamferLossWt = 1
@@ -65,6 +64,10 @@ params.nSamplesChamfer = 150 --number of points we'll sample per part
 params.useCubOnly = 0
 params.usePretrain = 0
 params.normFactor = 'Surf'
+params.pretrainNet = 'chairChamferSurf_null_small_init_prob0pt0001_shape0pt01'
+params.pretrainLrShape = 0.01
+params.pretrainLrProb = 0.0001
+params.pretrainIter = 20000
 
 -- one-line argument parser. parses enviroment variables to override the defaults
 for k,v in pairs(params) do params[k] = tonumber(os.getenv(k)) or os.getenv(k) or params[k] end
@@ -72,14 +75,7 @@ for k,v in pairs(params) do params[k] = tonumber(os.getenv(k)) or os.getenv(k) o
 if params.useBn == 0 then params.useBn = false end
 if params.usePretrain == 0 then params.usePretrain = false end
 params.synset = '0' .. tostring(params.synset) --to resolve string/number issues in passing bash arguments
-
-if(params.synset == '03001627') then
-    params.pretrainNet = 'chairChamferSurf_null_small_init_prob0pt0001_shape0pt01'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 20000
-elseif (params.synset == '02691156') then
-    params.pretrainNet = 'aeroChamferSurf_null_small_init_prob0pt0001_shape0pt01'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 30000
-elseif (params.synset == '0quadrapeds') then
-    params.pretrainNet = 'quadraChamferSurf_null_small_init_prob0pt0001_shape0pt01'; params.pretrainLrs = {0.01, 0.0001}; params.pretrainIter = 20000
-end
+params.pretrainLrs = {params.pretrainLrShape, params.pretrainLrProb}
 
 params.modelsDataDir = '../cachedir/shapenet/chamferData/' .. params.synset
 params.visDir = '../cachedir/visualization/' .. params.name
@@ -101,7 +97,6 @@ for p=1,#params.primTypes do
     if(params.primTypes[p] == 'Nu') then params.intrinsicReward[p] = -params.nullReward end
 end
 
-torch.manualSeed(params.rndSeed)
 paths.mkdir(params.visDir)
 paths.mkdir(params.visMeshesDir)
 paths.mkdir(params.snapshotDir)
