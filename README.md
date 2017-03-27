@@ -19,7 +19,7 @@ We'll first need to preprocess the ShapeNet models to compute voxelizations requ
 - Specify the synsets of interest in the [preprocessing script](preprocess/shapenet/precomputeShapeData.m) and then run it.
 
 #### b) Learning
-The training takes place in two stages. In the first we use all cuboids while biasing them to be small and then allow the netowrk to choose to use fewer cuboids. Sample scripts for the synset corresponding to chairs are below.
+The training takes place in two stages. In the first we use all cuboids while biasing them to be small and then allow the network to choose to use fewer cuboids. Sample scripts for the synset corresponding to chairs are below.
 ```
 # Stage 1
 cd experiments;
