@@ -1,4 +1,5 @@
 *ipynb_checkpoints
+external
 cachedir
 *.ipynb
 *.pyc
