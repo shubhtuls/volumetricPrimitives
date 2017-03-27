@@ -219,8 +219,8 @@ local function savePoints(points, outputFile)
     fout:close()
 end
 
-local function renderMesh(blendFile, meshFile, pngFile)
-    local command = string.format('bash ../renderer/render.sh %s %s %s',blendFile,meshFile,pngFile)
+local function renderMesh(blenderExec, blendFile, meshFile, pngFile)
+    local command = string.format('bash ../renderer/render.sh %s %s %s %s',blenderExec, blendFile, meshFile, pngFile)
     --print(command)
     os.execute(command)
 end
