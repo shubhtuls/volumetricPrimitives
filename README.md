@@ -22,12 +22,12 @@ The training takes place in two stages. In the first we use all cuboids while bi
 ```
 # Stage 1
 cd experiments;
-disp=0 gpu=1 nParts=20 nullReward=0 lossPower=2 shapeLrDecay=0.01 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.0001 usePretrain=0 nSamplesChamfer=150 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 th cadAutoEncCuboids/primSelTsdfChamfer.lua
+disp=0 gpu=1 nParts=20 nullReward=0 probLrDecay=0.0001 shapeLrDecay=0.01 synset=3001627 usePretrain=0 numTrainIter=20000 name=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 ```
 
 After the first network is trained, we allow the learning of primitive existence probabilities.
 ```
 # Stage 2
 cd experiments;
-disp=0 gpu=1 nParts=20 nullReward=8e-5 lossPower=2 shapeLrDecay=0.5 learningRate=0.001 gridSize=32 nSamplePoints=1000 synset=3001627 modelIter=2 useCubOnly=0 batchSizeVis=4 chamferLossWt=1 useBn=1 symLossWt=1 probLrDecay=0.2 usePretrain=1 nSamplesChamfer=150 numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
+pretrainNet=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 pretrainIter=20000 disp=0 gpu=1 nParts=20 nullReward=8e-5 shapeLrDecay=0.5   synset=3001627 probLrDecay=0.2 usePretrain=1  numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 ```
