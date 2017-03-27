@@ -1,8 +1,8 @@
 function [] = precomputeShapeData()
+startup;
 globals;
 shapenetDir = shapenetDir;
 cachedir = cachedir;
-params = params;
 vis = 0;
 %loop over sysnets
 synsetNames = {'03001627','02691156'}; %chair, aeroplane
