@@ -13,10 +13,9 @@ We provide code to train the abstraction models on ShapeNet categories.
 
 #### a) Preprocessing
 We'll first need to preprocess the ShapeNet models to compute voxelizations required as inputs as well as data required to implement the loss functions.
-- Modify the path to ShapeNet dataset in the [startup file](preprocess/shapenet/startup.m)
-- Specify the synsets of interest in the [preprocessing script](preprocess/shapenet/precomputeShapeData.m)
-- Install [gptoolbox](https://github.com/alecjacobson/gptoolbox) in external/gptoolbox. You'll need to compile the mex file for ```point_mesh_sqaured_distance```. You can first try [this precompiled version](https://people.eecs.berkeley.edu/~shubhtuls/cachedir/primitives/point_mesh_squared_distance.mexa64). If that does not work, you will have to compile it yourself.
-- Using Matlab, run the [preprocessing script](preprocess/shapenet/precomputeShapeData.m)
+- Install [gptoolbox](https://github.com/alecjacobson/gptoolbox) in external/gptoolbox. You'll need to compile the mex file for ```point_mesh_sqaured_distance```. You can first try [this precompiled version](https://people.eecs.berkeley.edu/~shubhtuls/cachedir/primitives/point_mesh_squared_distance.mexa64). If that does not work, you will have to compile it yourself - some helpful steps as required on my machine are pointed out [here](external/gptInstall.sh).
+- Modify the path to ShapeNet dataset (v1) in the [startup file](preprocess/shapenet/startup.m)
+- Specify the synsets of interest in the [preprocessing script](preprocess/shapenet/precomputeShapeData.m) and then run it.
 
 #### b) Learning
 The training takes place in two stages. In the first we use all cuboids while biasing them to be small and then allow the netowrk to choose to use fewer cuboids. Sample scripts for the synset corresponding to chairs are below.
