@@ -1,7 +1,8 @@
 #  Learning Shape Abstractions by Assembling Volumetric Primitives
 Shubham Tulsiani, Hao Su, Leonidas J. Guibas, Alexei A. Efros, Jitendra Malik. In CVPR, 2017.
-
 [Project Page](https://shubhtuls.github.io/volumetricPrimitives/)
+
+![Teaser Image](https://shubhtuls.github.io/volumetricPrimitives/resources/images/teaser.png)
 
 ### 1) Demo
 Please check out the [interactive notebook](demo/demo.ipynb) which shows how to compute the primitive based representation for an input shape. You'll need to - 
