@@ -5,16 +5,17 @@ Shubham Tulsiani, Hao Su, Leonidas J. Guibas, Alexei A. Efros, Jitendra Malik. I
 
 ### 1) Demo
 Please check out the [interactive notebook](demo/demo.ipynb) which shows how to compute the primitive based representation for an input shape. You'll need to - 
-- Download the [pretrained models](https://people.eecs.berkeley.edu/~shubhtuls/cachedir/primitives/models.tar.gz) and place them in a folder 'cachedir'
 - Install a working implementation of torch and itorch.
+- Edit the path to the blender executable in the demo script.
 
 ### 2) Training
 We provide code to train the abstraction models on ShapeNet categories.
 
 #### a) Preprocessing
-We'll first need to preprocess the ShapeNet models to compute voxelizations required as inout as well as data required to implement the loss functions.
+We'll first need to preprocess the ShapeNet models to compute voxelizations required as inputs as well as data required to implement the loss functions.
 - Modify the path to ShapeNet dataset in the [startup file](preprocess/shapenet/startup.m)
 - Specify the synsets of interest in the [preprocessing script](preprocess/shapenet/precomputeShapeData.m)
+- Install [gptoolbox](https://github.com/alecjacobson/gptoolbox) in external/gptoolbox. You'll need to compile the mex file for ```point_mesh_sqaured_distance```. You can first try [this precompiled version](https://people.eecs.berkeley.edu/~shubhtuls/cachedir/primitives/point_mesh_squared_distance.mexa64). If that does not work, you will have to compile it yourself.
 - Using Matlab, run the [preprocessing script](preprocess/shapenet/precomputeShapeData.m)
 
 #### b) Learning
