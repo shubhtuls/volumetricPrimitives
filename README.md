@@ -32,3 +32,17 @@ After the first network is trained, we allow the learning of primitive existence
 cd experiments;
 pretrainNet=chairChamferSurf_null_small_init_prob0pt0001_shape0pt01 pretrainIter=20000 disp=0 gpu=1 nParts=20 nullReward=8e-5 shapeLrDecay=0.5   synset=3001627 probLrDecay=0.2 usePretrain=1  numTrainIter=30000 name=chairChamferSurf_null_small_ft_prob0pt2_shape0pt5_null8em5 th cadAutoEncCuboids/primSelTsdfChamfer.lua
 ```
+### Citation
+If you use this code for your research, please consider citing:
+```
+@inProceedings{abstractionTulsiani17,
+  title={Learning Shape Abstractions by Assembling Volumetric Primitives},
+  author = {Shubham Tulsiani
+  and Hao Su
+  and Leonidas J. Guibas
+  and Alexei A. Efros
+  and Jitendra Malik},
+  booktitle={Computer Vision and Pattern Regognition (CVPR)},
+  year={2017}
+}
+```
