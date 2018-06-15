@@ -46,3 +46,6 @@ If you use this code for your research, please consider citing:
   year={2017}
 }
 ```
+
+### Other Implementations
+[Pytorch](https://github.com/nileshkulkarni/volumetricPrimitivesPytorch) (by Nilesh Kulkarni)
